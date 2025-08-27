@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://mida-backend.onrender.com';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://mida-backend-gpb7.onrender.com';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -47,8 +47,14 @@ export const verifyToken = async () => {
 };
 
 // Inventory functions
-export const getInventory = async () => {
-  const response = await api.get('/api/inventory');
+export const getInventoryAreas = async () => {
+  const response = await api.get('/api/inventory/areas');
+  return response.data;
+};
+
+export const getInventory = async (area?: string) => {
+  const params = area ? { area } : {};
+  const response = await api.get('/api/inventory', { params });
   return response.data;
 };
 
@@ -59,6 +65,11 @@ export const addInventoryItem = async (data: any) => {
 
 export const updateInventoryItem = async (id: number, data: any) => {
   const response = await api.put(`/api/inventory/${id}`, data);
+  return response.data;
+};
+
+export const discardInventoryItem = async (id: number, notes: string) => {
+  const response = await api.patch(`/api/inventory/${id}/discard`, { notes });
   return response.data;
 };
 

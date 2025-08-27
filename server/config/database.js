@@ -58,6 +58,7 @@ const createTables = async () => {
         lot_number VARCHAR(100),
         expiration_date DATE,
         storage_location VARCHAR(200),
+        area VARCHAR(100) NOT NULL DEFAULT 'PPC Balboa' CHECK (area IN ('PPC Balboa', 'PSA', 'Chiriquí', 'Tocumen', 'Colón', 'Bocas del Toro', 'Manzanillo')),
         status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('active', 'discarded', 'expired')),
         registered_by INTEGER REFERENCES users(id),
         registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -65,6 +66,26 @@ const createTables = async () => {
         discarded_by INTEGER REFERENCES users(id),
         notes TEXT
       )
+    `);
+
+    // Add area column to existing table if it doesn't exist
+    await client.query(`
+      ALTER TABLE chemical_inventory 
+      ADD COLUMN IF NOT EXISTS area VARCHAR(100) DEFAULT 'PPC Balboa' 
+      CHECK (area IN ('PPC Balboa', 'PSA', 'Chiriquí', 'Tocumen', 'Colón', 'Bocas del Toro', 'Manzanillo'))
+    `);
+
+    // Update existing records that might have the old area names
+    await client.query(`
+      UPDATE chemical_inventory 
+      SET area = 'PPC Balboa' 
+      WHERE area = 'PPC Valboa'
+    `);
+
+    await client.query(`
+      UPDATE chemical_inventory 
+      SET area = 'PSA' 
+      WHERE area = 'PCA'
     `);
 
     // Treatment certificates table

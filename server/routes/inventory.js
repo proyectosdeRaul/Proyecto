@@ -1,14 +1,28 @@
 const express = require('express');
 const { body, validationResult } = require('express-validator');
 const { pool } = require('../config/database');
-const { requirePermission } = require('../middleware/auth');
+const { authenticateToken, requirePermission } = require('../middleware/auth');
 
 const router = express.Router();
+
+// Apply authentication middleware to all routes
+router.use(authenticateToken);
+
+// Get available areas
+router.get('/areas', requirePermission('inventory', 'read'), async (req, res) => {
+  try {
+    const areas = ['PPC Balboa', 'PSA', 'Chiriquí', 'Tocumen', 'Colón', 'Bocas del Toro', 'Manzanillo'];
+    res.json(areas);
+  } catch (error) {
+    console.error('Error getting areas:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
 
 // Get all chemical inventory
 router.get('/', requirePermission('inventory', 'read'), async (req, res) => {
   try {
-    const { status, search } = req.query;
+    const { status, search, area } = req.query;
     let query = `
       SELECT ci.*, u.full_name as registered_by_name
       FROM chemical_inventory ci
@@ -17,6 +31,12 @@ router.get('/', requirePermission('inventory', 'read'), async (req, res) => {
     `;
     const params = [];
     let paramCount = 0;
+
+    if (area) {
+      paramCount++;
+      query += ` AND ci.area = $${paramCount}`;
+      params.push(area);
+    }
 
     if (status) {
       paramCount++;
@@ -67,7 +87,8 @@ router.post('/', [
   requirePermission('inventory', 'write'),
   body('chemical_name').notEmpty().withMessage('Nombre del químico es requerido'),
   body('quantity').isFloat({ min: 0 }).withMessage('Cantidad debe ser un número positivo'),
-  body('unit').notEmpty().withMessage('Unidad es requerida')
+  body('unit').notEmpty().withMessage('Unidad es requerida'),
+  body('area').isIn(['PPC Balboa', 'PSA', 'Chiriquí', 'Tocumen', 'Colón', 'Bocas del Toro', 'Manzanillo']).withMessage('Área no válida')
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -82,6 +103,7 @@ router.post('/', [
       chemical_name,
       quantity,
       unit,
+      area,
       concentration,
       manufacturer,
       lot_number,
@@ -92,12 +114,12 @@ router.post('/', [
 
     const result = await pool.query(`
       INSERT INTO chemical_inventory (
-        chemical_name, quantity, unit, concentration, manufacturer,
+        chemical_name, quantity, unit, area, concentration, manufacturer,
         lot_number, expiration_date, storage_location, notes, registered_by
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
       RETURNING *
     `, [
-      chemical_name, quantity, unit, concentration, manufacturer,
+      chemical_name, quantity, unit, area, concentration, manufacturer,
       lot_number, expiration_date, storage_location, notes, req.user.id
     ]);
 

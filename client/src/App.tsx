@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { Toaster } from 'react-hot-toast';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import InventoryModule from './components/InventoryModule.tsx';
 import './index.css';
 
@@ -15,19 +16,27 @@ const queryClient = new QueryClient({
   },
 });
 
-// Simple Login Component
+// Login Component with real authentication
 const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const { login } = useAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    // Simular login
-    setTimeout(() => {
-      window.location.href = '/';
-    }, 1000);
+    setError('');
+
+    try {
+      await login(username, password);
+      // La redirección se manejará automáticamente por el AuthProvider
+    } catch (err: any) {
+      setError(err.message || 'Error al iniciar sesión');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -60,6 +69,11 @@ const Login = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+              {error}
+            </div>
+          )}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Usuario
@@ -555,33 +569,61 @@ const Dashboard = () => {
   );
 };
 
+// Protected Route Component
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-700 mx-auto mb-4"></div>
+          <p className="text-gray-600">Cargando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
+};
+
 // App Component
+const AppContent = () => {
+  const { isAuthenticated } = useAuth();
+
+  return (
+    <Router>
+      <Routes>
+        <Route path="/login" element={isAuthenticated ? <Navigate to="/" replace /> : <Login />} />
+        <Route path="/" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
+        <Route path="/inventory" element={<ProtectedRoute><Layout><InventoryModule /></Layout></ProtectedRoute>} />
+        <Route path="/certificates" element={<ProtectedRoute><Layout><Certificates /></Layout></ProtectedRoute>} />
+        <Route path="/treatments" element={<ProtectedRoute><Layout><Treatments /></Layout></ProtectedRoute>} />
+        <Route path="/users" element={<ProtectedRoute><Layout><Users /></Layout></ProtectedRoute>} />
+        <Route path="/reports" element={<ProtectedRoute><Layout><Reports /></Layout></ProtectedRoute>} />
+        {/* Redirección por defecto */}
+        <Route path="*" element={<Navigate to={isAuthenticated ? "/" : "/login"} replace />} />
+      </Routes>
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: '#363636',
+            color: '#fff',
+          },
+        }}
+      />
+    </Router>
+  );
+};
+
 const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
-      <Router>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/" element={<Layout><Dashboard /></Layout>} />
-                          <Route path="/inventory" element={<Layout><InventoryModule /></Layout>} />
-          <Route path="/certificates" element={<Layout><Certificates /></Layout>} />
-          <Route path="/treatments" element={<Layout><Treatments /></Layout>} />
-          <Route path="/users" element={<Layout><Users /></Layout>} />
-          <Route path="/reports" element={<Layout><Reports /></Layout>} />
-          {/* Redirección por defecto al login */}
-          <Route path="*" element={<Navigate to="/login" replace />} />
-        </Routes>
-        <Toaster
-          position="top-right"
-          toastOptions={{
-            duration: 4000,
-            style: {
-              background: '#363636',
-              color: '#fff',
-            },
-          }}
-        />
-      </Router>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
     </QueryClientProvider>
   );
 };

@@ -4,9 +4,9 @@ import { loginUser, verifyToken } from '../services/api';
 interface User {
   id: number;
   username: string;
-  email: string;
-  role: 'admin' | 'user';
-  permissions: string[];
+  fullName: string;
+  role: string;
+  permissions: any;
 }
 
 interface AuthContextType {
