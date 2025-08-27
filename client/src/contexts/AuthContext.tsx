@@ -37,16 +37,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   useEffect(() => {
     const initAuth = async () => {
-      const token = localStorage.getItem('token');
-      if (token) {
-        try {
+      try {
+        const token = localStorage.getItem('token');
+        if (token) {
+          console.log('Token encontrado, verificando...');
           const userData = await verifyToken();
           setUser(userData);
-        } catch (error) {
-          localStorage.removeItem('token');
+          console.log('Usuario verificado:', userData);
+        } else {
+          console.log('No hay token almacenado');
         }
+      } catch (error) {
+        console.error('Error al verificar token:', error);
+        localStorage.removeItem('token');
+        setUser(null);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     initAuth();
@@ -54,11 +61,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const login = async (username: string, password: string) => {
     try {
+      console.log('Iniciando login con:', { username });
+      console.log('API URL:', process.env.REACT_APP_API_URL);
+      
       const response = await loginUser(username, password);
+      console.log('Respuesta del login:', response);
+      
       const { token, user: userData } = response;
       
       localStorage.setItem('token', token);
       setUser(userData);
+      console.log('Login exitoso');
     } catch (error: any) {
       console.error('Error en login:', error);
       

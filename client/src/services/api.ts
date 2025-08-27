@@ -7,6 +7,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 10000, // 10 seconds timeout
 });
 
 // Request interceptor to add auth token
@@ -37,8 +38,15 @@ api.interceptors.response.use(
 
 // Auth functions
 export const loginUser = async (username: string, password: string) => {
-  const response = await api.post('/api/auth/login', { username, password });
-  return response.data;
+  console.log('loginUser called with:', { username, baseURL: API_BASE_URL });
+  try {
+    const response = await api.post('/api/auth/login', { username, password });
+    console.log('loginUser response:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('loginUser error:', error);
+    throw error;
+  }
 };
 
 export const verifyToken = async () => {
