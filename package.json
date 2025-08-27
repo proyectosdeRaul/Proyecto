@@ -4,8 +4,10 @@
   "description": "Sistema de Inventarios Químicos - Ministerio de Desarrollo Agropecuario",
   "main": "server/index.js",
   "scripts": {
-    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "dev": "concurrently \"npm run server:dev\" \"npm run client\"",
+    "dev:full": "concurrently \"npm run server\" \"npm run client\"",
     "server": "nodemon server/index.js",
+    "server:dev": "nodemon server/server-dev.js",
     "client": "cd client && npm start",
     "build": "cd client && npm install && npm run build",
     "install-all": "npm install && cd client && npm install",

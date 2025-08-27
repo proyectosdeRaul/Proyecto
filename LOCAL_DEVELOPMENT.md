@@ -8,24 +8,28 @@
 npm run install-all
 ```
 
-### 2. Configurar variables de entorno
-Crea un archivo `.env` en la carpeta raíz con:
-```
-DATABASE_URL=tu_url_de_base_de_datos_postgresql
-JWT_SECRET=tu_secret_jwt_aqui
-NODE_ENV=development
-```
-
-### 3. Ejecutar el sistema completo
+### 2. Ejecutar el sistema (MODO SIMPLE - RECOMENDADO)
 ```bash
-# Opción 1: Ejecutar todo junto (recomendado)
+# Ejecuta servidor de desarrollo sin base de datos + frontend
 npm run dev
+```
 
-# Opción 2: Ejecutar por separado
-# Terminal 1 - Backend
+### 3. Ejecutar con base de datos PostgreSQL (MODO COMPLETO)
+Primero configura el archivo `.env` con tu base de datos:
+```bash
+# Ejecuta servidor completo con PostgreSQL + frontend
+npm run dev:full
+```
+
+### 4. Ejecutar por separado
+```bash
+# Terminal 1 - Backend de desarrollo (sin BD)
+npm run server:dev
+
+# Terminal 2 - Backend completo (con PostgreSQL)
 npm run server
 
-# Terminal 2 - Frontend  
+# Terminal 3 - Frontend  
 npm run client
 ```
 
