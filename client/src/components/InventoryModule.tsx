@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { getInventory, getInventoryAreas, addInventoryItem, discardInventoryItem } from '../services/api';
-import { useAuth } from '../contexts/AuthContext';
+import { getInventory, getInventoryAreas, addInventoryItem, discardInventoryItem } from '../services/api.ts';
+import { useAuth } from '../contexts/AuthContext.tsx';
 
 const InventoryModule = () => {
   const { user } = useAuth();
