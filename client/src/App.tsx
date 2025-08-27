@@ -117,7 +117,7 @@ const Inventory = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Inventario y Reportes</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Inventario</h1>
           <p className="text-gray-600">Gestión de productos químicos</p>
         </div>
         <button className="bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded-lg">
@@ -474,7 +474,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                 🏠 Inicio
               </Link>
               <Link to="/inventory" className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-lg transition-colors">
-                📦 Inventario y Reportes
+                📦 Inventario
               </Link>
               <Link to="/certificates" className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-lg transition-colors">
                 📄 Constancias
@@ -626,6 +626,8 @@ const App = () => {
           <Route path="/treatments" element={<Layout><Treatments /></Layout>} />
           <Route path="/users" element={<Layout><Users /></Layout>} />
           <Route path="/reports" element={<Layout><Reports /></Layout>} />
+          {/* Redirección por defecto al login */}
+          <Route path="*" element={<Login />} />
         </Routes>
         <Toaster
           position="top-right"
