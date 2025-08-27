@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { Toaster } from 'react-hot-toast';
@@ -106,12 +106,209 @@ const Login = () => {
   );
 };
 
+// Modal Component for Add Chemical
+const AddChemicalModal = ({ isOpen, onClose, onAdd }: { 
+  isOpen: boolean; 
+  onClose: () => void; 
+  onAdd: (chemical: any) => void; 
+}) => {
+  const [formData, setFormData] = useState({
+    name: '',
+    type: '',
+    quantity: '',
+    reason: ''
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const now = new Date();
+    const chemicalData = {
+      ...formData,
+      user: 'admin', // Usuario actual
+      date: now.toISOString().split('T')[0],
+      time: now.toTimeString().split(' ')[0],
+      status: 'Activo'
+    };
+
+    try {
+      // Enviar al backend
+      const response = await fetch('https://mida-backend-gpb7.onrender.com/api/inventory', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(chemicalData),
+      });
+
+      if (response.ok) {
+        const savedChemical = await response.json();
+        onAdd(savedChemical);
+        setFormData({ name: '', type: '', quantity: '', reason: '' });
+        onClose();
+      } else {
+        console.error('Error al guardar el químico');
+      }
+    } catch (error) {
+      console.error('Error de conexión:', error);
+      // Si no hay backend, simular guardado local
+      onAdd({ id: Date.now(), ...chemicalData });
+      setFormData({ name: '', type: '', quantity: '', reason: '' });
+      onClose();
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-bold text-gray-900">Añadir Químico</h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 text-2xl"
+          >
+            ×
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Nombre del Químico *
+            </label>
+            <input
+              type="text"
+              value={formData.name}
+              onChange={(e) => setFormData({...formData, name: e.target.value})}
+              className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
+              placeholder="Ej: Cloruro de Sodio"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Tipo de Químico/Herramienta *
+            </label>
+            <select
+              value={formData.type}
+              onChange={(e) => setFormData({...formData, type: e.target.value})}
+              className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
+              required
+            >
+              <option value="">Seleccionar tipo</option>
+              <option value="Herbicida">Herbicida</option>
+              <option value="Fertilizante">Fertilizante</option>
+              <option value="Fungicida">Fungicida</option>
+              <option value="Insecticida">Insecticida</option>
+              <option value="Desinfectante">Desinfectante</option>
+              <option value="Herramienta">Herramienta</option>
+              <option value="Otro">Otro</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Cantidad *
+            </label>
+            <input
+              type="text"
+              value={formData.quantity}
+              onChange={(e) => setFormData({...formData, quantity: e.target.value})}
+              className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
+              placeholder="Ej: 50 kg, 25 L, 10 unidades"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Motivo de Adición *
+            </label>
+            <textarea
+              value={formData.reason}
+              onChange={(e) => setFormData({...formData, reason: e.target.value})}
+              className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
+              placeholder="Explique el motivo por el cual se añade este químico"
+              rows={3}
+              required
+            />
+          </div>
+
+          <div className="bg-gray-50 p-3 rounded-lg">
+            <div className="text-sm text-gray-600">
+              <p><strong>Usuario:</strong> admin</p>
+              <p><strong>Fecha:</strong> {new Date().toLocaleDateString()}</p>
+              <p><strong>Hora:</strong> {new Date().toLocaleTimeString()}</p>
+            </div>
+          </div>
+
+          <div className="flex space-x-3 pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              className="flex-1 px-4 py-2 bg-blue-700 text-white rounded-lg hover:bg-blue-800"
+            >
+              Añadir Químico
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
 // Inventory Component
 const Inventory = () => {
   const [products, setProducts] = useState([
-    { id: 1, name: 'Herbicida X', category: 'Herbicida', quantity: '20', status: 'Activo' },
-    { id: 2, name: 'Fertilizante Y', category: 'Fertilizante', quantity: '15', status: 'Activo' }
+    { id: 1, name: 'Herbicida X', type: 'Herbicida', quantity: '20', status: 'Activo', user: 'admin', date: '2024-01-15' },
+    { id: 2, name: 'Fertilizante Y', type: 'Fertilizante', quantity: '15', status: 'Activo', user: 'admin', date: '2024-01-10' }
   ]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Cargar productos del backend al montar el componente
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        const response = await fetch('https://mida-backend-gpb7.onrender.com/api/inventory');
+        if (response.ok) {
+          const data = await response.json();
+          setProducts(data);
+        }
+      } catch (error) {
+        console.log('Usando datos locales');
+      }
+    };
+
+    loadProducts();
+  }, []);
+
+  const handleAddChemical = (newChemical: any) => {
+    setProducts(prev => [...prev, newChemical]);
+  };
+
+  const handleDiscardChemical = async (id: number) => {
+    try {
+      const response = await fetch(`https://mida-backend-gpb7.onrender.com/api/inventory/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        setProducts(prev => prev.filter(product => product.id !== id));
+      }
+    } catch (error) {
+      // Si no hay backend, simular eliminación local
+      setProducts(prev => prev.filter(product => product.id !== id));
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -120,7 +317,10 @@ const Inventory = () => {
           <h1 className="text-2xl font-bold text-gray-900">Inventario</h1>
           <p className="text-gray-600">Gestión de productos químicos</p>
         </div>
-        <button className="bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded-lg">
+        <button 
+          onClick={() => setIsModalOpen(true)}
+          className="bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded-lg"
+        >
           + Añadir Item
         </button>
       </div>
@@ -134,8 +334,10 @@ const Inventory = () => {
             <thead className="bg-blue-700">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase">Nombre</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase">Categoría</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase">Tipo</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase">Cantidad</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase">Usuario</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase">Fecha</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase">Acciones</th>
               </tr>
             </thead>
@@ -143,11 +345,18 @@ const Inventory = () => {
               {products.map((product) => (
                 <tr key={product.id}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{product.name}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{product.category}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{product.type}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{product.quantity}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{product.user || 'admin'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{product.date || '2024-01-15'}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <button className="text-purple-600 hover:text-purple-900 mr-2">+</button>
-                    <button className="text-gray-600 hover:text-gray-900">🗑️</button>
+                    <button 
+                      onClick={() => handleDiscardChemical(product.id)}
+                      className="text-red-600 hover:text-red-900"
+                      title="Descartar"
+                    >
+                      🗑️
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -155,6 +364,12 @@ const Inventory = () => {
           </table>
         </div>
       </div>
+
+      <AddChemicalModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onAdd={handleAddChemical}
+      />
     </div>
   );
 };

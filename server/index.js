@@ -4,21 +4,13 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
-const authRoutes = require('./routes/auth');
-const inventoryRoutes = require('./routes/inventory');
-const certificatesRoutes = require('./routes/certificates');
-const treatmentsRoutes = require('./routes/treatments');
-const usersRoutes = require('./routes/users');
-const reportsRoutes = require('./routes/reports');
-
-const { connectDB } = require('./config/database');
-const { authenticateToken } = require('./middleware/auth');
-
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Security middleware
+// Middleware
 app.use(helmet());
+app.use(cors());
+app.use(express.json());
 
 // Rate limiting
 const limiter = rateLimit({
@@ -27,20 +19,31 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// CORS configuration
-app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? ['https://mida-frontend.onrender.com', 'https://mida-backend.onrender.com'] 
-    : ['http://localhost:3000'],
-  credentials: true
-}));
-
-// Body parsing middleware
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
-// Static files
-app.use('/uploads', express.static('uploads'));
+// Simulated database for inventory
+let inventory = [
+  {
+    id: 1,
+    name: 'Herbicida X',
+    type: 'Herbicida',
+    quantity: '20',
+    status: 'Activo',
+    user: 'admin',
+    date: '2024-01-15',
+    time: '10:30:00',
+    reason: 'Control de malezas en área de cuarentena'
+  },
+  {
+    id: 2,
+    name: 'Fertilizante Y',
+    type: 'Fertilizante',
+    quantity: '15',
+    status: 'Activo',
+    user: 'admin',
+    date: '2024-01-10',
+    time: '14:20:00',
+    reason: 'Mantenimiento de plantas en invernadero'
+  }
+];
 
 // Root endpoint
 app.get('/', (req, res) => {
@@ -63,48 +66,120 @@ app.get('/', (req, res) => {
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'OK', 
-    message: 'MIDA Chemical Inventory System is running',
-    timestamp: new Date().toISOString()
+  res.json({
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
   });
 });
 
-// API Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/inventory', authenticateToken, inventoryRoutes);
-app.use('/api/certificates', authenticateToken, certificatesRoutes);
-app.use('/api/treatments', authenticateToken, treatmentsRoutes);
-app.use('/api/users', authenticateToken, usersRoutes);
-app.use('/api/reports', authenticateToken, reportsRoutes);
+// Inventory endpoints
+app.get('/api/inventory', (req, res) => {
+  try {
+    res.json(inventory);
+  } catch (error) {
+    res.status(500).json({ error: 'Error al obtener el inventario' });
+  }
+});
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ 
-    error: 'Algo salió mal en el servidor',
-    message: process.env.NODE_ENV === 'development' ? err.message : 'Error interno del servidor'
+app.post('/api/inventory', (req, res) => {
+  try {
+    const { name, type, quantity, reason } = req.body;
+    
+    if (!name || !type || !quantity || !reason) {
+      return res.status(400).json({ error: 'Todos los campos son requeridos' });
+    }
+
+    const now = new Date();
+    const newChemical = {
+      id: Date.now(),
+      name,
+      type,
+      quantity,
+      reason,
+      user: 'admin', // Usuario actual
+      date: now.toISOString().split('T')[0],
+      time: now.toTimeString().split(' ')[0],
+      status: 'Activo'
+    };
+
+    inventory.push(newChemical);
+    res.status(201).json(newChemical);
+  } catch (error) {
+    res.status(500).json({ error: 'Error al agregar el químico' });
+  }
+});
+
+app.delete('/api/inventory/:id', (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const index = inventory.findIndex(item => item.id === id);
+    
+    if (index === -1) {
+      return res.status(404).json({ error: 'Químico no encontrado' });
+    }
+
+    inventory.splice(index, 1);
+    res.json({ message: 'Químico eliminado correctamente' });
+  } catch (error) {
+    res.status(500).json({ error: 'Error al eliminar el químico' });
+  }
+});
+
+// Auth endpoints (placeholder)
+app.post('/api/auth/login', (req, res) => {
+  res.json({
+    message: 'Login endpoint',
+    token: 'dummy-token'
   });
 });
 
-// 404 handler
-app.use('*', (req, res) => {
-  res.status(404).json({ error: 'Ruta no encontrada' });
+// Certificates endpoints (placeholder)
+app.get('/api/certificates', (req, res) => {
+  res.json([
+    { id: 1, type: 'Fumigación', product: 'Cloruro de Sodio', date: '2024-01-15', status: 'Generado' },
+    { id: 2, type: 'Aspersión', product: 'Hipoclorito de Calcio', date: '2024-01-10', status: 'Pendiente' }
+  ]);
+});
+
+// Treatments endpoints (placeholder)
+app.get('/api/treatments', (req, res) => {
+  res.json([
+    { id: 1, type: 'Fumigación', location: 'Puerto de Panamá', date: '2024-01-20', status: 'Programado' },
+    { id: 2, type: 'Aspersión', location: 'Almacén Central', date: '2024-01-18', status: 'En Progreso' }
+  ]);
+});
+
+// Users endpoints (placeholder)
+app.get('/api/users', (req, res) => {
+  res.json([
+    { id: 1, name: 'Admin', role: 'Administrador', email: 'admin@mida.gob.pa', status: 'Activo' },
+    { id: 2, name: 'Usuario', role: 'Operativo', email: 'user@mida.gob.pa', status: 'Activo' }
+  ]);
+});
+
+// Reports endpoints (placeholder)
+app.get('/api/reports', (req, res) => {
+  res.json({
+    inventory: inventory.length,
+    certificates: 2,
+    treatments: 2,
+    users: 2
+  });
 });
 
 // Start server
-const startServer = async () => {
-  try {
-    await connectDB();
-    app.listen(PORT, () => {
-      console.log(`🚀 Servidor MIDA ejecutándose en puerto ${PORT}`);
-      console.log(`📊 Sistema de Inventarios Químicos - MIDA`);
-      console.log(`🔗 API disponible en: http://localhost:${PORT}/api`);
-    });
-  } catch (error) {
-    console.error('Error al iniciar el servidor:', error);
-    process.exit(1);
-  }
-};
-
-startServer();
+app.listen(PORT, () => {
+  console.log(`🚀 Servidor MIDA corriendo en puerto ${PORT}`);
+  console.log(`📊 Endpoints disponibles:`);
+  console.log(`   - GET  / (información del servidor)`);
+  console.log(`   - GET  /api/health (estado del servidor)`);
+  console.log(`   - GET  /api/inventory (obtener inventario)`);
+  console.log(`   - POST /api/inventory (agregar químico)`);
+  console.log(`   - DELETE /api/inventory/:id (eliminar químico)`);
+  console.log(`   - POST /api/auth/login (autenticación)`);
+  console.log(`   - GET  /api/certificates (constancias)`);
+  console.log(`   - GET  /api/treatments (tratamientos)`);
+  console.log(`   - GET  /api/users (usuarios)`);
+  console.log(`   - GET  /api/reports (reportes)`);
+});
