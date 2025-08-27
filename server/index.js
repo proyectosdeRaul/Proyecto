@@ -42,6 +42,25 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Static files
 app.use('/uploads', express.static('uploads'));
 
+// Root endpoint
+app.get('/', (req, res) => {
+  res.json({
+    message: 'Sistema de Inventarios Químicos - MIDA',
+    version: '1.0.0',
+    status: 'Servidor funcionando correctamente',
+    endpoints: {
+      health: '/api/health',
+      auth: '/api/auth',
+      inventory: '/api/inventory',
+      certificates: '/api/certificates',
+      treatments: '/api/treatments',
+      users: '/api/users',
+      reports: '/api/reports'
+    },
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ 
