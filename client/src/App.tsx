@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { Toaster } from 'react-hot-toast';
 import './index.css';
@@ -109,8 +109,8 @@ const Login = () => {
 // Inventory Component
 const Inventory = () => {
   const [products, setProducts] = useState([
-    { id: 1, name: 'Cloruro de Sodio', quantity: '50 kg', date: '2024-01-15', status: 'Activo' },
-    { id: 2, name: 'Hipoclorito de Calcio', quantity: '25 L', date: '2024-01-10', status: 'Activo' }
+    { id: 1, name: 'Herbicida X', category: 'Herbicida', quantity: '20', status: 'Activo' },
+    { id: 2, name: 'Fertilizante Y', category: 'Fertilizante', quantity: '15', status: 'Activo' }
   ]);
 
   return (
@@ -121,7 +121,7 @@ const Inventory = () => {
           <p className="text-gray-600">Gestión de productos químicos</p>
         </div>
         <button className="bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded-lg">
-          + Agregar Producto
+          + Añadir Item
         </button>
       </div>
 
@@ -131,29 +131,23 @@ const Inventory = () => {
         </div>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+            <thead className="bg-blue-700">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Producto</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cantidad</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fecha</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Estado</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Acciones</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase">Nombre</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase">Categoría</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase">Cantidad</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase">Acciones</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {products.map((product) => (
                 <tr key={product.id}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{product.name}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{product.category}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{product.quantity}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{product.date}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                      {product.status}
-                    </span>
-                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <button className="text-blue-600 hover:text-blue-900 mr-2">Editar</button>
-                    <button className="text-red-600 hover:text-red-900">Eliminar</button>
+                    <button className="text-purple-600 hover:text-purple-900 mr-2">+</button>
+                    <button className="text-gray-600 hover:text-gray-900">🗑️</button>
                   </td>
                 </tr>
               ))}
@@ -190,13 +184,13 @@ const Certificates = () => {
         </div>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+            <thead className="bg-blue-700">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tipo</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Producto</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fecha</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Estado</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Acciones</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase">Tipo</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase">Producto</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase">Fecha</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase">Estado</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase">Acciones</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -251,13 +245,13 @@ const Treatments = () => {
         </div>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+            <thead className="bg-blue-700">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tipo</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ubicación</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fecha</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Estado</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Acciones</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase">Tipo</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase">Ubicación</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase">Fecha</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase">Estado</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase">Acciones</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -376,13 +370,13 @@ const Users = () => {
         </div>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+            <thead className="bg-blue-700">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nombre</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rol</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Estado</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Acciones</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase">Nombre</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase">Rol</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase">Email</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase">Estado</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase">Acciones</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -417,13 +411,13 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
+      <header className="bg-gradient-to-r from-blue-700 to-blue-900 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo and Title */}
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-900 rounded-lg flex items-center justify-center mr-3">
+                <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center mr-3">
                   <img 
                     src="/imagenes/logo.png" 
                     alt="Logo MIDA" 
@@ -432,10 +426,10 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                 </div>
               </div>
               <div>
-                <h1 className="text-lg font-semibold text-gray-900">
+                <h1 className="text-lg font-semibold text-white">
                   Sistema de Inventarios Químicos
                 </h1>
-                <p className="text-sm text-gray-500">
+                <p className="text-blue-100 text-sm">
                   Ministerio de Desarrollo Agropecuario
                 </p>
               </div>
@@ -443,19 +437,19 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
             {/* User Menu */}
             <div className="flex items-center space-x-4">
-              <div className="text-sm text-gray-700">
+              <div className="text-sm text-blue-100">
                 <span className="font-medium">admin</span>
-                <span className="ml-2 text-gray-500">(admin)</span>
+                <span className="ml-2 text-blue-200">(admin)</span>
               </div>
               <button
                 onClick={() => window.location.href = '/login'}
-                className="flex items-center text-gray-500 hover:text-gray-700 transition-colors"
+                className="flex items-center text-blue-100 hover:text-white transition-colors"
               >
                 Salir
               </button>
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"
+                className="lg:hidden p-2 rounded-md text-blue-200 hover:text-white hover:bg-blue-600"
               >
                 ☰
               </button>
@@ -467,25 +461,25 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       {/* Main Content */}
       <div className="flex">
         {/* Sidebar */}
-        <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 lg:static lg:inset-0 transition-transform duration-300 ease-in-out`}>
+        <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-gradient-to-b from-blue-800 to-blue-900 shadow-xl transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 lg:static lg:inset-0 transition-transform duration-300 ease-in-out`}>
           <div className="h-full flex flex-col">
             <nav className="flex-1 px-4 py-6 space-y-2">
-              <Link to="/" className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-lg transition-colors">
+              <Link to="/" className="block px-4 py-3 text-blue-100 hover:bg-blue-700 hover:text-white rounded-lg transition-colors">
                 🏠 Inicio
               </Link>
-              <Link to="/inventory" className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-lg transition-colors">
+              <Link to="/inventory" className="block px-4 py-3 text-blue-100 hover:bg-blue-700 hover:text-white rounded-lg transition-colors">
                 📦 Inventario
               </Link>
-              <Link to="/certificates" className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-lg transition-colors">
+              <Link to="/certificates" className="block px-4 py-3 text-blue-100 hover:bg-blue-700 hover:text-white rounded-lg transition-colors">
                 📄 Constancias
               </Link>
-              <Link to="/treatments" className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-lg transition-colors">
+              <Link to="/treatments" className="block px-4 py-3 text-blue-100 hover:bg-blue-700 hover:text-white rounded-lg transition-colors">
                 📅 Programación de Tratamiento
               </Link>
-              <Link to="/users" className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-lg transition-colors">
+              <Link to="/users" className="block px-4 py-3 text-blue-100 hover:bg-blue-700 hover:text-white rounded-lg transition-colors">
                 👥 Gestión de Usuarios
               </Link>
-              <Link to="/reports" className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-lg transition-colors">
+              <Link to="/reports" className="block px-4 py-3 text-blue-100 hover:bg-blue-700 hover:text-white rounded-lg transition-colors">
                 📊 Reportes
               </Link>
             </nav>
@@ -627,7 +621,7 @@ const App = () => {
           <Route path="/users" element={<Layout><Users /></Layout>} />
           <Route path="/reports" element={<Layout><Reports /></Layout>} />
           {/* Redirección por defecto al login */}
-          <Route path="*" element={<Login />} />
+          <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
         <Toaster
           position="top-right"
