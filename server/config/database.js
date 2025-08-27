@@ -88,6 +88,32 @@ const createTables = async () => {
       WHERE area = 'PCA'
     `);
 
+    // Create default admin user if it doesn't exist
+    const bcrypt = require('bcryptjs');
+    const adminPassword = await bcrypt.hash('Admin123', 10);
+    
+    await client.query(`
+      INSERT INTO users (username, password, full_name, email, role, permissions, is_active)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      ON CONFLICT (username) DO NOTHING
+    `, [
+      'admin',
+      adminPassword,
+      'Administrador MIDA',
+      'admin@mida.gob.pa',
+      'admin',
+      JSON.stringify({
+        inventory: ['read', 'write', 'delete'],
+        certificates: ['read', 'write', 'delete'],
+        treatments: ['read', 'write', 'delete'],
+        users: ['read', 'write', 'delete'],
+        reports: ['read', 'write']
+      }),
+      true
+    ]);
+
+    console.log('✅ Usuario admin creado/verificado: admin / Admin123');
+
     // Treatment certificates table
     await client.query(`
       CREATE TABLE IF NOT EXISTS treatment_certificates (

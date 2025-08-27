@@ -33,7 +33,13 @@ const Login = () => {
       await login(username, password);
       // La redirección se manejará automáticamente por el AuthProvider
     } catch (err: any) {
-      setError(err.message || 'Error al iniciar sesión');
+      // Mejorar mensaje de error para credenciales incorrectas
+      const errorMessage = err.message || 'Error al iniciar sesión';
+      if (errorMessage.includes('Usuario o contraseña') || errorMessage.includes('incorrectos') || errorMessage.includes('inválido')) {
+        setError('Credenciales incorrectas. Inténtalo de nuevo.');
+      } else {
+        setError(errorMessage);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -70,8 +76,17 @@ const Login = () => {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-              {error}
+            <div className="bg-red-50 border border-red-300 text-red-800 px-4 py-3 rounded-lg shadow-sm">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium">{error}</p>
+                </div>
+              </div>
             </div>
           )}
           <div>

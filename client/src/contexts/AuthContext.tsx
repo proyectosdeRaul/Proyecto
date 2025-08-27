@@ -60,7 +60,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       localStorage.setItem('token', token);
       setUser(userData);
     } catch (error: any) {
-      throw new Error(error.response?.data?.error || 'Error al iniciar sesión');
+      console.error('Error en login:', error);
+      
+      // Mejorar manejo de errores
+      if (error.response?.status === 401) {
+        throw new Error('Credenciales incorrectas. Inténtalo de nuevo.');
+      } else if (error.response?.data?.error) {
+        throw new Error(error.response.data.error);
+      } else if (error.code === 'ECONNREFUSED' || error.code === 'NETWORK_ERROR') {
+        throw new Error('Error de conexión. Verifica tu conexión a internet.');
+      } else {
+        throw new Error('Error al iniciar sesión. Inténtalo de nuevo.');
+      }
     }
   };
 
