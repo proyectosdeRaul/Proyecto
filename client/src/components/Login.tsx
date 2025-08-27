@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Eye, EyeOff, Shield, User } from 'lucide-react';
+import { Eye, EyeOff, Shield, User, Lock } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const Login: React.FC = () => {
@@ -9,14 +9,13 @@ const Login: React.FC = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  
   const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!username || !password) {
+    if (!username.trim() || !password.trim()) {
       toast.error('Por favor complete todos los campos');
       return;
     }
@@ -26,40 +25,53 @@ const Login: React.FC = () => {
     try {
       await login(username, password);
       toast.success('Inicio de sesión exitoso');
-      navigate('/dashboard');
+      navigate('/');
     } catch (error: any) {
-      const errorMessage = error.response?.data?.error || 'Error al iniciar sesión';
-      toast.error(errorMessage);
+      toast.error(error.message || 'Error al iniciar sesión');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-mida-50 to-mida-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        {/* Header */}
-        <div className="text-center">
-          <div className="mx-auto h-20 w-20 bg-mida-600 rounded-full flex items-center justify-center mb-4">
-            <Shield className="h-10 w-10 text-white" />
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-gray-100 flex items-center justify-center p-4">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+        <div className="absolute top-40 left-40 w-80 h-80 bg-blue-100 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
+      </div>
+
+      <div className="relative z-10 w-full max-w-md">
+        {/* Logo and Header */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-600 to-blue-800 rounded-full shadow-lg mb-6">
+            <Shield className="w-10 h-10 text-white" />
           </div>
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
             MIDA
-          </h2>
-          <p className="text-lg text-mida-700 font-medium">
+          </h1>
+          <p className="text-blue-600 font-semibold text-lg mb-1">
             Ministerio de Desarrollo Agropecuario
           </p>
-          <p className="text-sm text-gray-600 mt-1">
+          <p className="text-gray-600 text-sm">
             Dirección Ejecutiva de Cuarentena
           </p>
-          <h3 className="text-xl font-semibold text-gray-800 mt-6">
-            Sistema de Inventarios Químicos
-          </h3>
         </div>
 
-        {/* Login Form */}
-        <div className="card p-8">
-          <form className="space-y-6" onSubmit={handleSubmit}>
+        {/* Login Card */}
+        <div className="bg-white rounded-2xl shadow-2xl p-8 border border-gray-100">
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              Iniciar Sesión
+            </h2>
+            <p className="text-gray-600">
+              Sistema de Inventarios Químicos
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Username Field */}
             <div>
               <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
                 Usuario
@@ -70,41 +82,38 @@ const Login: React.FC = () => {
                 </div>
                 <input
                   id="username"
-                  name="username"
                   type="text"
-                  required
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="input-field pl-10"
+                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
                   placeholder="Ingrese su usuario"
                   disabled={isLoading}
                 />
               </div>
             </div>
 
+            {/* Password Field */}
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
                 Contraseña
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Shield className="h-5 w-5 text-gray-400" />
+                  <Lock className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
                   id="password"
-                  name="password"
                   type={showPassword ? 'text' : 'password'}
-                  required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="input-field pl-10 pr-10"
+                  className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
                   placeholder="Ingrese su contraseña"
                   disabled={isLoading}
                 />
                 <button
                   type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
                   onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
                   disabled={isLoading}
                 >
                   {showPassword ? (
@@ -116,39 +125,43 @@ const Login: React.FC = () => {
               </div>
             </div>
 
-            <div>
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="btn-primary w-full flex justify-center items-center"
-              >
-                {isLoading ? (
-                  <div className="flex items-center">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Iniciando sesión...
-                  </div>
-                ) : (
-                  'Iniciar Sesión'
-                )}
-              </button>
-            </div>
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 px-4 rounded-lg font-semibold shadow-lg hover:from-blue-700 hover:to-blue-800 focus:ring-4 focus:ring-blue-300 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isLoading ? (
+                <div className="flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                  Iniciando sesión...
+                </div>
+              ) : (
+                'Iniciar Sesión'
+              )}
+            </button>
           </form>
 
-          {/* Demo Credentials */}
-          <div className="mt-6 p-4 bg-mida-50 rounded-lg border border-mida-200">
-            <h4 className="text-sm font-medium text-mida-800 mb-2">Credenciales de Demo:</h4>
-            <div className="text-xs text-mida-700 space-y-1">
-              <p><strong>Usuario:</strong> admin</p>
-              <p><strong>Contraseña:</strong> admin123</p>
-            </div>
+          {/* Footer */}
+          <div className="mt-8 pt-6 border-t border-gray-200">
+            <p className="text-center text-xs text-gray-500">
+              © 2024 Ministerio de Desarrollo Agropecuario - MIDA
+            </p>
+            <p className="text-center text-xs text-gray-400 mt-1">
+              Sistema de Inventarios Químicos v1.0.0
+            </p>
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="text-center">
-          <p className="text-xs text-gray-500">
-            © 2024 Ministerio de Desarrollo Agropecuario. Todos los derechos reservados.
-          </p>
+        {/* Demo Credentials */}
+        <div className="mt-6 bg-blue-50 rounded-lg p-4 border border-blue-200">
+          <h3 className="text-sm font-semibold text-blue-800 mb-2">
+            Credenciales de Prueba:
+          </h3>
+          <div className="text-xs text-blue-700 space-y-1">
+            <p><strong>Administrador:</strong> admin / admin123</p>
+            <p><strong>Usuario:</strong> user / user123</p>
+          </div>
         </div>
       </div>
     </div>
