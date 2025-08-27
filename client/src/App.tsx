@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { Toaster } from 'react-hot-toast';
-import InventoryModule from './components/InventoryModule';
+import InventoryModule from './components/InventoryModule.tsx';
 import './index.css';
 
 // Create a client
