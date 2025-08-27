@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { Toaster } from 'react-hot-toast';
-import InventoryComponent from './components/InventoryComponent';
+import InventoryPage from './components/InventoryPage';
 import './index.css';
 
 // Create a client
@@ -563,7 +563,7 @@ const App = () => {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/" element={<Layout><Dashboard /></Layout>} />
-                          <Route path="/inventory" element={<Layout><InventoryComponent /></Layout>} />
+                          <Route path="/inventory" element={<Layout><InventoryPage /></Layout>} />
           <Route path="/certificates" element={<Layout><Certificates /></Layout>} />
           <Route path="/treatments" element={<Layout><Treatments /></Layout>} />
           <Route path="/users" element={<Layout><Users /></Layout>} />
