@@ -1,0 +1,10 @@
+[33m8a0bfca[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m Crear Inventory.tsx con nombre simple para solucionar error de build
+[33m3c3b48d[m Crear InventoryPage.tsx para solucionar error de build definitivamente
+[33m68f7b9c[m Crear nuevo componente InventoryComponent para solucionar error de build
+[33m9ececf5[m Simplificar Inventory.tsx para solucionar error de build
+[33med77e67[m Corregir archivo Inventory.tsx para solucionar error de build en Render
+[33m40ffea9[m Sistema completo de inventario con modales para añadir, descartar y añadir más. Backend con PostgreSQL real. Login funcional
+[33m5271075[m Implementar sistema completo de inventario funcional con formulario modal, backend API y persistencia de datos
+[33m2119c7f[m Mejorar diseño con azul institucional, corregir login, actualizar inventario con columnas correctas y acciones añadir/descartar
+[33m3992637[m Cambiar nombre a 'Inventario' y agregar redirección al login
+[33mc191221[m Agregar logo MIDA, mejorar colores institucionales y funcionalidad completa a módulos
