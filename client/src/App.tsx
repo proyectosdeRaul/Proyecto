@@ -2,15 +2,6 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { Toaster } from 'react-hot-toast';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
-import Layout from './components/Layout';
-import Login from './components/Login';
-import Dashboard from './components/Dashboard';
-import Inventory from './components/Inventory';
-import Certificates from './components/Certificates';
-import Treatments from './components/Treatments';
-import Users from './components/Users';
-import Reports from './components/Reports';
 import './index.css';
 
 // Create a client
@@ -23,102 +14,23 @@ const queryClient = new QueryClient({
   },
 });
 
-// Protected Route Component
-const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated, isLoading } = useAuth();
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-mida-600"></div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-
-  return <Layout>{children}</Layout>;
-};
-
-// Main App Component
-const AppContent: React.FC = () => {
-  const { isAuthenticated } = useAuth();
-
-  return (
-    <Router>
-      <Routes>
-        <Route 
-          path="/login" 
-          element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />} 
-        />
-        <Route 
-          path="/dashboard" 
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/inventory" 
-          element={
-            <ProtectedRoute>
-              <Inventory />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/certificates" 
-          element={
-            <ProtectedRoute>
-              <Certificates />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/treatments" 
-          element={
-            <ProtectedRoute>
-              <Treatments />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/users" 
-          element={
-            <ProtectedRoute>
-              <Users />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/reports" 
-          element={
-            <ProtectedRoute>
-              <Reports />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/" 
-          element={<Navigate to="/dashboard" replace />} 
-        />
-        <Route 
-          path="*" 
-          element={<Navigate to="/dashboard" replace />} 
-        />
-      </Routes>
-    </Router>
-  );
-};
-
+// Simple App Component
 const App: React.FC = () => {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <AppContent />
+      <Router>
+        <div className="min-h-screen bg-gray-100">
+          <div className="container mx-auto px-4 py-8">
+            <h1 className="text-3xl font-bold text-center text-blue-600 mb-8">
+              Sistema de Inventarios Químicos - MIDA
+            </h1>
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <p className="text-center text-gray-600">
+                Aplicación en construcción...
+              </p>
+            </div>
+          </div>
+        </div>
         <Toaster
           position="top-right"
           toastOptions={{
@@ -127,23 +39,9 @@ const App: React.FC = () => {
               background: '#363636',
               color: '#fff',
             },
-            success: {
-              duration: 3000,
-              iconTheme: {
-                primary: '#10B981',
-                secondary: '#fff',
-              },
-            },
-            error: {
-              duration: 5000,
-              iconTheme: {
-                primary: '#EF4444',
-                secondary: '#fff',
-              },
-            },
           }}
         />
-      </AuthProvider>
+      </Router>
     </QueryClientProvider>
   );
 };
