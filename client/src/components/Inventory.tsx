@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-const InventoryPage = () => {
+const Inventory = () => {
   const [products, setProducts] = useState<any[]>([]);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isDiscardModalOpen, setIsDiscardModalOpen] = useState(false);
@@ -167,4 +167,4 @@ const InventoryPage = () => {
   );
 };
 
-export default InventoryPage;
+export default Inventory;
