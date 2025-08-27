@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Package, Plus, Search, Filter } from 'lucide-react';
 
 // Modal Component for Add Chemical
 const AddChemicalModal = ({ isOpen, onClose, onAdd }: { 
