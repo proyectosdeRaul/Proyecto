@@ -1,0 +1,9 @@
+{
+  "short_name": "MIDA Inventarios",
+  "name": "Sistema de Inventarios Químicos - MIDA",
+  "description": "Sistema de control, registro y generación de reportes sobre productos químicos utilizados en tratamientos cuarentenarios",
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#1e40af",
+  "background_color": "#ffffff"
+}
