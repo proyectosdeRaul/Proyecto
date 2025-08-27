@@ -30,7 +30,7 @@ app.use(limiter);
 // CORS configuration
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
-    ? ['https://your-domain.com'] 
+    ? ['https://mida-frontend.onrender.com', 'https://mida-backend.onrender.com'] 
     : ['http://localhost:3000'],
   credentials: true
 }));
