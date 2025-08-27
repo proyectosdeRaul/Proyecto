@@ -1,0 +1,58 @@
+services:
+  # Backend API Service
+  - type: web
+    name: mida-backend
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: DB_HOST
+        fromDatabase:
+          name: mida-postgres
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: mida-postgres
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: mida-postgres
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: mida-postgres
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: mida-postgres
+          property: password
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 24h
+      - key: UPLOAD_PATH
+        value: ./uploads
+      - key: MAX_FILE_SIZE
+        value: 5242880
+
+  # Frontend Web Service
+  - type: web
+    name: mida-frontend
+    env: static
+    plan: free
+    buildCommand: cd client && npm install && npm run build
+    staticPublishPath: ./client/build
+    envVars:
+      - key: REACT_APP_API_URL
+        value: https://mida-backend.onrender.com/api
+
+databases:
+  - name: mida-postgres
+    databaseName: mida_chemical_inventory
+    user: mida_user
+    plan: free
