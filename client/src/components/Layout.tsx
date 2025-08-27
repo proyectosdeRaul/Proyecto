@@ -1,5 +1,4 @@
 import React from 'react';
-import { useAuth } from '../contexts/AuthContext';
 import { LogOut, Menu, X } from 'lucide-react';
 
 interface LayoutProps {
@@ -7,11 +6,11 @@ interface LayoutProps {
 }
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const { user, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
 
   const handleLogout = () => {
-    logout();
+    // Simular logout
+    window.location.href = '/login';
   };
 
   return (
@@ -40,8 +39,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             {/* User Menu */}
             <div className="flex items-center space-x-4">
               <div className="text-sm text-gray-700">
-                <span className="font-medium">{user?.username}</span>
-                <span className="ml-2 text-gray-500">({user?.role})</span>
+                <span className="font-medium">admin</span>
+                <span className="ml-2 text-gray-500">(admin)</span>
               </div>
               <button
                 onClick={handleLogout}
@@ -79,11 +78,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               <a href="/treatments" className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-lg transition-colors">
                 Programación de Tratamiento
               </a>
-              {user?.role === 'admin' && (
-                <a href="/users" className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-lg transition-colors">
-                  Gestión de Usuarios
-                </a>
-              )}
+              <a href="/users" className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-lg transition-colors">
+                Gestión de Usuarios
+              </a>
               <a href="/reports" className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-lg transition-colors">
                 Reportes
               </a>

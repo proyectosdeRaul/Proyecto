@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
 import { Eye, EyeOff, Shield, User, Lock } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -9,7 +8,6 @@ const Login: React.FC = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -22,15 +20,12 @@ const Login: React.FC = () => {
 
     setIsLoading(true);
     
-    try {
-      await login(username, password);
+    // Simular login exitoso
+    setTimeout(() => {
       toast.success('Inicio de sesión exitoso');
       navigate('/');
-    } catch (error: any) {
-      toast.error(error.message || 'Error al iniciar sesión');
-    } finally {
       setIsLoading(false);
-    }
+    }, 1000);
   };
 
   return (

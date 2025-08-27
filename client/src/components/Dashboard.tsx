@@ -1,10 +1,7 @@
 import React from 'react';
-import { useAuth } from '../contexts/AuthContext';
 import { Home, Package, FileText, Calendar, BarChart3 } from 'lucide-react';
 
 const Dashboard: React.FC = () => {
-  const { user } = useAuth();
-
   const stats = [
     {
       title: 'Productos en Inventario',
@@ -42,7 +39,7 @@ const Dashboard: React.FC = () => {
           </div>
           <div className="ml-4">
             <h1 className="text-2xl font-bold text-gray-900">
-              Bienvenido, {user?.username}!
+              Bienvenido, admin!
             </h1>
             <p className="text-gray-600">
               Sistema de Inventarios Químicos - MIDA
