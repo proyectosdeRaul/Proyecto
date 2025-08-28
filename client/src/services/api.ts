@@ -1,6 +1,12 @@
 import axios from 'axios';
 
+console.log('Environment variables:', {
+  NODE_ENV: process.env.NODE_ENV,
+  REACT_APP_API_URL: process.env.REACT_APP_API_URL
+});
+
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://mida-backend-gpb7.onrender.com';
+console.log('API_BASE_URL final:', API_BASE_URL);
 
 const api = axios.create({
   baseURL: API_BASE_URL,
