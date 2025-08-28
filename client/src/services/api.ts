@@ -1,6 +1,9 @@
 import axios from 'axios';
 
+// API Configuration - Updated for correct backend URL
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://mida-backend-gpb7.onrender.com/api';
+
+console.log('🔗 API Base URL configured:', API_BASE_URL);
 
 const api = axios.create({
   baseURL: API_BASE_URL,
