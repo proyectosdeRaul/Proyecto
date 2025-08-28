@@ -1,7 +1,7 @@
 services:
   # Backend API Service
   - type: web
-    name: mida-backend
+    name: mida-backend-gpb7
     env: node
     plan: free
     buildCommand: npm install
@@ -46,14 +46,14 @@ services:
 
   # Frontend Web Service
   - type: web
-    name: mida-frontend
+    name: mida-frontend-gpb7
     env: static
     plan: free
     buildCommand: cd client && npm install && npm run build
     staticPublishPath: ./client/build
     envVars:
       - key: REACT_APP_API_URL
-        value: https://mida-backend.onrender.com/api
+        value: https://mida-backend-gpb7.onrender.com/api
 
 databases:
   - name: mida-postgres
