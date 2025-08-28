@@ -115,6 +115,46 @@ const initDatabase = async () => {
 
       console.log('✅ Usuario admin creado/verificado: admin / Admin123');
       
+      // Create chemical inventory table
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS chemical_inventory (
+          id SERIAL PRIMARY KEY,
+          name VARCHAR(255) NOT NULL,
+          type VARCHAR(50) CHECK (type IN ('Químico', 'Herramienta')),
+          quantity INTEGER DEFAULT 0,
+          unit VARCHAR(50) DEFAULT 'unidades',
+          location VARCHAR(255),
+          created_by VARCHAR(100),
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+      console.log('✅ Tabla chemical_inventory creada/verificada');
+
+      // Create log tables
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS discard_logs (
+          id SERIAL PRIMARY KEY,
+          product_id INTEGER REFERENCES chemical_inventory(id),
+          quantity INTEGER NOT NULL,
+          reason TEXT,
+          discarded_by VARCHAR(255),
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS addition_logs (
+          id SERIAL PRIMARY KEY,
+          product_id INTEGER REFERENCES chemical_inventory(id),
+          quantity INTEGER NOT NULL,
+          reason TEXT,
+          added_by VARCHAR(255),
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+      console.log('✅ Tablas de logs creadas/verificadas');
+      
       client.release();
       console.log('✅ Base de datos inicializada correctamente');
       return;
@@ -320,9 +360,124 @@ app.get('/api/auth/verify', async (req, res) => {
   }
 });
 
-// Basic inventory endpoints (placeholder for now)
-app.get('/api/inventory', (req, res) => {
-  res.json([]);
+// Inventory endpoints
+app.get('/api/inventory', async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT * FROM chemical_inventory ORDER BY created_at DESC'
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error obteniendo inventario:', error);
+    res.status(500).json({ error: 'Error al obtener el inventario' });
+  }
+});
+
+app.post('/api/inventory', async (req, res) => {
+  try {
+    const { name, type, quantity, reason, created_by } = req.body;
+    
+    const result = await pool.query(
+      `INSERT INTO chemical_inventory (name, type, quantity, unit, location, created_by) 
+       VALUES ($1, $2, $3, $4, $5, $6) 
+       RETURNING *`,
+      [name, type, quantity, 'unidades', 'Almacén Principal', created_by || 'admin']
+    );
+    
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Error agregando producto:', error);
+    res.status(500).json({ error: 'Error al agregar el producto' });
+  }
+});
+
+app.post('/api/inventory/:id/discard', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { quantity, reason, discarded_by } = req.body;
+    
+    // Verificar que el producto existe y tiene suficiente cantidad
+    const checkResult = await pool.query(
+      'SELECT * FROM chemical_inventory WHERE id = $1',
+      [id]
+    );
+    
+    if (checkResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Producto no encontrado' });
+    }
+    
+    const product = checkResult.rows[0];
+    if (product.quantity < quantity) {
+      return res.status(400).json({ error: 'Cantidad insuficiente' });
+    }
+    
+    // Actualizar cantidad
+    const updateResult = await pool.query(
+      'UPDATE chemical_inventory SET quantity = quantity - $1 WHERE id = $2 RETURNING *',
+      [quantity, id]
+    );
+    
+    // Registrar el descarte en una tabla de logs (si existe)
+    try {
+      await pool.query(
+        `INSERT INTO discard_logs (product_id, quantity, reason, discarded_by) 
+         VALUES ($1, $2, $3, $4)`,
+        [id, quantity, reason, discarded_by || 'admin']
+      );
+    } catch (logError) {
+      console.log('Tabla de logs no existe aún');
+    }
+    
+    res.json({
+      message: 'Producto descartado exitosamente',
+      product: updateResult.rows[0]
+    });
+  } catch (error) {
+    console.error('Error descartando producto:', error);
+    res.status(500).json({ error: 'Error al descartar el producto' });
+  }
+});
+
+app.post('/api/inventory/:id/add-more', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { quantity, reason, added_by } = req.body;
+    
+    // Verificar que el producto existe
+    const checkResult = await pool.query(
+      'SELECT * FROM chemical_inventory WHERE id = $1',
+      [id]
+    );
+    
+    if (checkResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Producto no encontrado' });
+    }
+    
+    // Actualizar cantidad
+    const updateResult = await pool.query(
+      'UPDATE chemical_inventory SET quantity = quantity + $1 WHERE id = $2 RETURNING *',
+      [quantity, id]
+    );
+    
+    // Registrar la adición en una tabla de logs (si existe)
+    try {
+      await pool.query(
+        `INSERT INTO addition_logs (product_id, quantity, reason, added_by) 
+         VALUES ($1, $2, $3, $4)`,
+        [id, quantity, reason, added_by || 'admin']
+      );
+    } catch (logError) {
+      console.log('Tabla de logs no existe aún');
+    }
+    
+    res.json({
+      message: 'Cantidad añadida exitosamente',
+      product: updateResult.rows[0]
+    });
+  } catch (error) {
+    console.error('Error añadiendo cantidad:', error);
+    res.status(500).json({ error: 'Error al añadir cantidad' });
+  }
 });
 
 app.get('/api/certificates', (req, res) => {
