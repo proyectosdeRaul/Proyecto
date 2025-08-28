@@ -37,25 +37,25 @@ if (process.env.DATABASE_URL) {
 }
 
 // Middleware
-app.use(helmet());
-
-// CORS configuration - Allow all origins temporarily for debugging
-app.use(cors({
-  origin: true, // Allow all origins
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
-  exposedHeaders: ['X-Total-Count']
+app.use(helmet({
+  crossOriginResourcePolicy: false,
 }));
 
-// Handle preflight requests
-app.options('*', (req, res) => {
-  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+// CORS - Manual configuration for maximum compatibility
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  res.header('Access-Control-Allow-Origin', origin || '*');
+  res.header('Access-Control-Allow-Credentials', 'true');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-  res.header('Access-Control-Allow-Credentials', 'true');
-  res.sendStatus(204);
+  
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(204);
+  }
+  
+  next();
 });
+
 app.use(express.json());
 
 // Rate limiting
@@ -134,6 +134,11 @@ const initDatabase = async () => {
 
 // Initialize database on startup
 initDatabase();
+
+// Test endpoint - super simple
+app.get('/test', (req, res) => {
+  res.send('Server is working!');
+});
 
 // Root endpoint
 app.get('/', (req, res) => {
@@ -341,12 +346,17 @@ app.get('/api/reports', (req, res) => {
   });
 });
 
+// Error handling
+app.use((err, req, res, next) => {
+  console.error('Error:', err);
+  res.status(500).json({ error: 'Error interno del servidor' });
+});
+
 // Start server
-app.listen(PORT, () => {
+const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Servidor MIDA corriendo en puerto ${PORT}`);
   console.log(`🌍 Entorno: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🔗 CORS configurado para:`);
-  corsOptions.origin.forEach(origin => console.log(`   - ${origin}`));
+  console.log(`🔗 CORS configurado para: TODOS LOS ORÍGENES (temporalmente)`);
   console.log(`📊 Endpoints disponibles:`);
   console.log(`   - GET  / (información del servidor)`);
   console.log(`   - GET  /api/health (estado del servidor)`);
@@ -361,4 +371,10 @@ app.listen(PORT, () => {
   if (process.env.NODE_ENV === 'production') {
     console.log(`🌐 Frontend esperado en: https://mida-frontend-gpb7.onrender.com`);
   }
+});
+
+// Handle server errors
+server.on('error', (error) => {
+  console.error('Error al iniciar servidor:', error);
+  process.exit(1);
 });
