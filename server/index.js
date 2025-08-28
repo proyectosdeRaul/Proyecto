@@ -363,19 +363,84 @@ app.get('/api/auth/verify', async (req, res) => {
 // Inventory endpoints
 app.get('/api/inventory', async (req, res) => {
   try {
+    console.log('📦 Obteniendo inventario...');
+    
+    // Check if table exists first
+    const tableCheck = await pool.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_name = 'chemical_inventory'
+      );
+    `);
+    
+    if (!tableCheck.rows[0].exists) {
+      console.log('📦 Tabla chemical_inventory no existe, creando...');
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS chemical_inventory (
+          id SERIAL PRIMARY KEY,
+          name VARCHAR(255) NOT NULL,
+          type VARCHAR(50) CHECK (type IN ('Químico', 'Herramienta')),
+          quantity INTEGER DEFAULT 0,
+          unit VARCHAR(50) DEFAULT 'unidades',
+          location VARCHAR(255),
+          created_by VARCHAR(100),
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+    }
+    
     const result = await pool.query(
       'SELECT * FROM chemical_inventory ORDER BY created_at DESC'
     );
+    
+    console.log(`📦 Inventario obtenido: ${result.rows.length} productos`);
     res.json(result.rows);
   } catch (error) {
-    console.error('Error obteniendo inventario:', error);
-    res.status(500).json({ error: 'Error al obtener el inventario' });
+    console.error('❌ Error obteniendo inventario:', error);
+    res.status(500).json({ 
+      error: 'Error al obtener el inventario',
+      details: error.message 
+    });
   }
 });
 
 app.post('/api/inventory', async (req, res) => {
   try {
+    console.log('📦 Agregando producto:', req.body);
     const { name, type, quantity, reason, created_by } = req.body;
+    
+    // Validate required fields
+    if (!name || !type || !quantity) {
+      return res.status(400).json({ 
+        error: 'Faltan campos requeridos: name, type, quantity' 
+      });
+    }
+    
+    // Check if table exists
+    const tableCheck = await pool.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_name = 'chemical_inventory'
+      );
+    `);
+    
+    if (!tableCheck.rows[0].exists) {
+      console.log('📦 Tabla chemical_inventory no existe, creando...');
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS chemical_inventory (
+          id SERIAL PRIMARY KEY,
+          name VARCHAR(255) NOT NULL,
+          type VARCHAR(50) CHECK (type IN ('Químico', 'Herramienta')),
+          quantity INTEGER DEFAULT 0,
+          unit VARCHAR(50) DEFAULT 'unidades',
+          location VARCHAR(255),
+          created_by VARCHAR(100),
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+    }
     
     const result = await pool.query(
       `INSERT INTO chemical_inventory (name, type, quantity, unit, location, created_by) 
@@ -384,10 +449,14 @@ app.post('/api/inventory', async (req, res) => {
       [name, type, quantity, 'unidades', 'Almacén Principal', created_by || 'admin']
     );
     
+    console.log('✅ Producto agregado exitosamente:', result.rows[0]);
     res.status(201).json(result.rows[0]);
   } catch (error) {
-    console.error('Error agregando producto:', error);
-    res.status(500).json({ error: 'Error al agregar el producto' });
+    console.error('❌ Error agregando producto:', error);
+    res.status(500).json({ 
+      error: 'Error al agregar el producto',
+      details: error.message 
+    });
   }
 });
 
@@ -477,6 +546,24 @@ app.post('/api/inventory/:id/add-more', async (req, res) => {
   } catch (error) {
     console.error('Error añadiendo cantidad:', error);
     res.status(500).json({ error: 'Error al añadir cantidad' });
+  }
+});
+
+// Areas endpoint
+app.get('/api/inventory/areas', (req, res) => {
+  try {
+    // Return predefined areas for now
+    const areas = [
+      'PPC Balboa',
+      'PPC Cristóbal', 
+      'Almacén Central',
+      'Laboratorio',
+      'Oficina Administrativa'
+    ];
+    res.json(areas);
+  } catch (error) {
+    console.error('Error obteniendo áreas:', error);
+    res.status(500).json({ error: 'Error al obtener áreas' });
   }
 });
 
