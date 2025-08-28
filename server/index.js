@@ -38,7 +38,20 @@ if (process.env.DATABASE_URL) {
 
 // Middleware
 app.use(helmet());
-app.use(cors());
+
+// CORS configuration for production
+const corsOptions = {
+  origin: [
+    'https://mida-frontend-gpb7.onrender.com',
+    'http://localhost:3000',
+    'https://mida-frontend.onrender.com'
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Rate limiting
@@ -327,6 +340,9 @@ app.get('/api/reports', (req, res) => {
 // Start server
 app.listen(PORT, () => {
   console.log(`🚀 Servidor MIDA corriendo en puerto ${PORT}`);
+  console.log(`🌍 Entorno: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`🔗 CORS configurado para:`);
+  corsOptions.origin.forEach(origin => console.log(`   - ${origin}`));
   console.log(`📊 Endpoints disponibles:`);
   console.log(`   - GET  / (información del servidor)`);
   console.log(`   - GET  /api/health (estado del servidor)`);
@@ -337,4 +353,8 @@ app.listen(PORT, () => {
   console.log(`   - GET  /api/treatments (tratamientos)`);
   console.log(`   - GET  /api/users (usuarios)`);
   console.log(`   - GET  /api/reports (reportes)`);
+  
+  if (process.env.NODE_ENV === 'production') {
+    console.log(`🌐 Frontend esperado en: https://mida-frontend-gpb7.onrender.com`);
+  }
 });
