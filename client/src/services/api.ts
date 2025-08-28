@@ -3,10 +3,15 @@ import axios from 'axios';
 // API Configuration - Updated for correct backend URL
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://mida-backend-gpb7.onrender.com/api';
 
-console.log('🔗 API Base URL configured:', API_BASE_URL);
+// Force correct backend URL for production
+const PRODUCTION_API_URL = 'https://mida-backend-gpb7.onrender.com/api';
+const FINAL_API_URL = window.location.hostname === 'mida-frontend-gpb7.onrender.com' ? PRODUCTION_API_URL : API_BASE_URL;
+
+console.log('🔗 API Base URL configured:', FINAL_API_URL);
+console.log('🌐 Current hostname:', window.location.hostname);
 
 const api = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: FINAL_API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -41,6 +46,7 @@ api.interceptors.response.use(
 
 // Auth functions
 export const loginUser = async (username: string, password: string) => {
+  console.log('🔑 Attempting login to:', FINAL_API_URL + '/auth/login');
   try {
     const response = await api.post('/auth/login', { username, password });
     return response.data;
