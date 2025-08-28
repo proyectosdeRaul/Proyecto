@@ -2,11 +2,27 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
-const path = require('path');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const { Pool } = require('pg');
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+// PostgreSQL connection
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  host: process.env.DB_HOST || 'localhost',
+  port: process.env.DB_PORT || 5432,
+  database: process.env.DB_NAME || 'mida_chemical_inventory',
+  user: process.env.DB_USER || 'postgres',
+  password: process.env.DB_PASSWORD || 'admin123',
+  max: 20,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000,
+});
 
 // Middleware
 app.use(helmet());
@@ -20,30 +36,62 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// Database connection and initialization
-const { connectDB } = require('./config/database');
+// Initialize database
+const initDatabase = async () => {
+  try {
+    const client = await pool.connect();
+    console.log('✅ Base de datos PostgreSQL conectada exitosamente');
+    
+    // Create users table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        username VARCHAR(50) UNIQUE NOT NULL,
+        password VARCHAR(255) NOT NULL,
+        full_name VARCHAR(100) NOT NULL,
+        email VARCHAR(100),
+        role VARCHAR(20) DEFAULT 'user' CHECK (role IN ('admin', 'user')),
+        permissions JSONB DEFAULT '{}',
+        is_active BOOLEAN DEFAULT true,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Create default admin user if it doesn't exist
+    const adminPassword = await bcrypt.hash('Admin123', 10);
+    
+    await client.query(`
+      INSERT INTO users (username, password, full_name, email, role, permissions, is_active)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      ON CONFLICT (username) DO NOTHING
+    `, [
+      'admin',
+      adminPassword,
+      'Administrador MIDA',
+      'admin@mida.gob.pa',
+      'admin',
+      JSON.stringify({
+        inventory: ['read', 'write', 'delete'],
+        certificates: ['read', 'write', 'delete'],
+        treatments: ['read', 'write', 'delete'],
+        users: ['read', 'write', 'delete'],
+        reports: ['read', 'write']
+      }),
+      true
+    ]);
+
+    console.log('✅ Usuario admin creado/verificado: admin / Admin123');
+    
+    client.release();
+    console.log('✅ Base de datos inicializada correctamente');
+  } catch (error) {
+    console.error('❌ Error inicializando base de datos:', error);
+  }
+};
 
 // Initialize database on startup
-connectDB();
-
-// Import routes
-const authRoutes = require('./routes/auth');
-const inventoryRoutes = require('./routes/inventory');
-const certificatesRoutes = require('./routes/certificates');
-const treatmentsRoutes = require('./routes/treatments');
-const usersRoutes = require('./routes/users');
-const reportsRoutes = require('./routes/reports');
-
-// Authentication middleware
-const authenticateToken = require('./middleware/auth');
-
-// Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/inventory', authenticateToken, inventoryRoutes);
-app.use('/api/certificates', authenticateToken, certificatesRoutes);
-app.use('/api/treatments', authenticateToken, treatmentsRoutes);
-app.use('/api/users', authenticateToken, usersRoutes);
-app.use('/api/reports', authenticateToken, reportsRoutes);
+initDatabase();
 
 // Root endpoint
 app.get('/', (req, res) => {
@@ -73,6 +121,145 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Auth login endpoint
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+      return res.status(400).json({ 
+        error: 'Datos de entrada inválidos'
+      });
+    }
+
+    // Get user from database
+    const result = await pool.query(
+      'SELECT id, username, password, full_name, role, permissions, is_active FROM users WHERE username = $1',
+      [username]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(401).json({ error: 'Usuario o contraseña incorrectos' });
+    }
+
+    const user = result.rows[0];
+
+    if (!user.is_active) {
+      return res.status(401).json({ error: 'Usuario inactivo' });
+    }
+
+    // Verify password
+    const isValidPassword = await bcrypt.compare(password, user.password);
+    if (!isValidPassword) {
+      return res.status(401).json({ error: 'Usuario o contraseña incorrectos' });
+    }
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { 
+        userId: user.id, 
+        username: user.username,
+        role: user.role 
+      },
+      process.env.JWT_SECRET || 'mida_jwt_secret_development_2024',
+      { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
+    );
+
+    // Update last login
+    await pool.query(
+      'UPDATE users SET updated_at = CURRENT_TIMESTAMP WHERE id = $1',
+      [user.id]
+    );
+
+    res.json({
+      message: 'Inicio de sesión exitoso',
+      token,
+      user: {
+        id: user.id,
+        username: user.username,
+        fullName: user.full_name,
+        role: user.role,
+        permissions: user.permissions
+      }
+    });
+
+  } catch (error) {
+    console.error('Error en login:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+// Auth verify endpoint
+app.get('/api/auth/verify', async (req, res) => {
+  try {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) {
+      return res.status(401).json({ error: 'Token no proporcionado' });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'mida_jwt_secret_development_2024');
+    
+    const result = await pool.query(
+      'SELECT id, username, full_name, role, permissions, is_active FROM users WHERE id = $1',
+      [decoded.userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(401).json({ error: 'Usuario no encontrado' });
+    }
+
+    const user = result.rows[0];
+    
+    if (!user.is_active) {
+      return res.status(401).json({ error: 'Usuario inactivo' });
+    }
+
+    res.json({
+      valid: true,
+      user: {
+        id: user.id,
+        username: user.username,
+        fullName: user.full_name,
+        role: user.role,
+        permissions: user.permissions
+      }
+    });
+
+  } catch (error) {
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({ error: 'Token expirado' });
+    }
+    res.status(403).json({ error: 'Token inválido' });
+  }
+});
+
+// Basic inventory endpoints (placeholder for now)
+app.get('/api/inventory', (req, res) => {
+  res.json([]);
+});
+
+app.get('/api/certificates', (req, res) => {
+  res.json([]);
+});
+
+app.get('/api/treatments', (req, res) => {
+  res.json([]);
+});
+
+app.get('/api/users', (req, res) => {
+  res.json([]);
+});
+
+app.get('/api/reports', (req, res) => {
+  res.json({
+    inventory: 0,
+    certificates: 0,
+    treatments: 0,
+    users: 1
+  });
+});
 
 // Start server
 app.listen(PORT, () => {
@@ -80,11 +267,9 @@ app.listen(PORT, () => {
   console.log(`📊 Endpoints disponibles:`);
   console.log(`   - GET  / (información del servidor)`);
   console.log(`   - GET  /api/health (estado del servidor)`);
-  console.log(`   - GET  /api/inventory (obtener inventario)`);
-  console.log(`   - POST /api/inventory (agregar químico)`);
-  console.log(`   - POST /api/inventory/:id/discard (registrar descarte)`);
-  console.log(`   - POST /api/inventory/:id/add-more (registrar adición)`);
   console.log(`   - POST /api/auth/login (autenticación)`);
+  console.log(`   - GET  /api/auth/verify (verificar token)`);
+  console.log(`   - GET  /api/inventory (inventario)`);
   console.log(`   - GET  /api/certificates (constancias)`);
   console.log(`   - GET  /api/treatments (tratamientos)`);
   console.log(`   - GET  /api/users (usuarios)`);
