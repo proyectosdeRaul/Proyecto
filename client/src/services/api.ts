@@ -1,10 +1,10 @@
 import axios from 'axios';
 
 // API Configuration - Updated for correct backend URL
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://mida-backend-gpb7.onrender.com/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://mida-backend-cd4t.onrender.com/api';
 
 // Force correct backend URL for production
-const PRODUCTION_API_URL = 'https://mida-backend-gpb7.onrender.com/api';
+const PRODUCTION_API_URL = 'https://mida-backend-cd4t.onrender.com/api';
 const FINAL_API_URL = window.location.hostname === 'mida-frontend-gpb7.onrender.com' ? PRODUCTION_API_URL : API_BASE_URL;
 
 console.log('🔗 API Base URL configured:', FINAL_API_URL);
