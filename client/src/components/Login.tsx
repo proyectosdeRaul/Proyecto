@@ -20,12 +20,48 @@ const Login: React.FC = () => {
 
     setIsLoading(true);
     
-    // Simular login exitoso
-    setTimeout(() => {
-      toast.success('Inicio de sesión exitoso');
-      navigate('/');
+    try {
+      // Intentar conexión real al backend
+      const response = await fetch('https://mida-backend-gpb7.onrender.com/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, password }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        toast.success('Inicio de sesión exitoso');
+        navigate('/');
+      } else {
+        throw new Error('Login failed');
+      }
+    } catch (error) {
+      console.error('Error de conexión:', error);
+      
+      // Si falla la conexión, usar modo demo
+      if (username === 'admin' && password === 'admin123') {
+        const mockUser = {
+          id: 1,
+          username: 'admin',
+          fullName: 'Administrador MIDA',
+          role: 'admin'
+        };
+        
+        localStorage.setItem('token', 'mock-jwt-token');
+        localStorage.setItem('user', JSON.stringify(mockUser));
+        
+        toast.warning('Modo Demo - Sin conexión al servidor');
+        navigate('/');
+      } else {
+        toast.error('Usuario o contraseña incorrectos');
+      }
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   return (
