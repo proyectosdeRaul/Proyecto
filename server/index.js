@@ -41,17 +41,35 @@ app.use(helmet());
 
 // CORS configuration for production
 const corsOptions = {
-  origin: [
-    'https://mida-frontend-gpb7.onrender.com',
-    'http://localhost:3000',
-    'https://mida-frontend.onrender.com'
-  ],
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl)
+    if (!origin) return callback(null, true);
+    
+    const allowedOrigins = [
+      'https://mida-frontend-gpb7.onrender.com',
+      'http://localhost:3000',
+      'https://mida-frontend.onrender.com'
+    ];
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.log(`Blocked by CORS: ${origin}`);
+      callback(null, true); // Temporarily allow all origins for debugging
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+  exposedHeaders: ['X-Total-Count'],
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 };
 
 app.use(cors(corsOptions));
+
+// Add explicit OPTIONS handling for preflight requests
+app.options('*', cors(corsOptions));
 app.use(express.json());
 
 // Rate limiting
