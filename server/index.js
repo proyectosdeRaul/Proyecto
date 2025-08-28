@@ -39,37 +39,23 @@ if (process.env.DATABASE_URL) {
 // Middleware
 app.use(helmet());
 
-// CORS configuration for production
-const corsOptions = {
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl)
-    if (!origin) return callback(null, true);
-    
-    const allowedOrigins = [
-      'https://mida-frontend-gpb7.onrender.com',
-      'http://localhost:3000',
-      'https://mida-frontend.onrender.com'
-    ];
-    
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      console.log(`Blocked by CORS: ${origin}`);
-      callback(null, true); // Temporarily allow all origins for debugging
-    }
-  },
+// CORS configuration - Allow all origins temporarily for debugging
+app.use(cors({
+  origin: true, // Allow all origins
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
-  exposedHeaders: ['X-Total-Count'],
-  preflightContinue: false,
-  optionsSuccessStatus: 204
-};
+  exposedHeaders: ['X-Total-Count']
+}));
 
-app.use(cors(corsOptions));
-
-// Add explicit OPTIONS handling for preflight requests
-app.options('*', cors(corsOptions));
+// Handle preflight requests
+app.options('*', (req, res) => {
+  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.sendStatus(204);
+});
 app.use(express.json());
 
 // Rate limiting
