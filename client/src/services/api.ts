@@ -1,12 +1,6 @@
 import axios from 'axios';
 
-console.log('Environment variables:', {
-  NODE_ENV: process.env.NODE_ENV,
-  REACT_APP_API_URL: process.env.REACT_APP_API_URL
-});
-
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://mida-backend-gpb7.onrender.com';
-console.log('API_BASE_URL final:', API_BASE_URL);
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://mida-backend-gpb7.onrender.com/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -44,67 +38,64 @@ api.interceptors.response.use(
 
 // Auth functions
 export const loginUser = async (username: string, password: string) => {
-  console.log('loginUser called with:', { username, baseURL: API_BASE_URL });
   try {
-    const response = await api.post('/api/auth/login', { username, password });
-    console.log('loginUser response:', response.data);
+    const response = await api.post('/auth/login', { username, password });
     return response.data;
   } catch (error) {
-    console.error('loginUser error:', error);
     throw error;
   }
 };
 
 export const verifyToken = async () => {
-  const response = await api.get('/api/auth/verify');
+  const response = await api.get('/auth/verify');
   return response.data.user;
 };
 
 // Inventory functions
 export const getInventoryAreas = async () => {
-  const response = await api.get('/api/inventory/areas');
+  const response = await api.get('/inventory/areas');
   return response.data;
 };
 
 export const getInventory = async (area?: string) => {
   const params = area ? { area } : {};
-  const response = await api.get('/api/inventory', { params });
+  const response = await api.get('/inventory', { params });
   return response.data;
 };
 
 export const addInventoryItem = async (data: any) => {
-  const response = await api.post('/api/inventory', data);
+  const response = await api.post('/inventory', data);
   return response.data;
 };
 
 export const updateInventoryItem = async (id: number, data: any) => {
-  const response = await api.put(`/api/inventory/${id}`, data);
+  const response = await api.put(`/inventory/${id}`, data);
   return response.data;
 };
 
 export const discardInventoryItem = async (id: number, notes: string) => {
-  const response = await api.patch(`/api/inventory/${id}/discard`, { notes });
+  const response = await api.patch(`/inventory/${id}/discard`, { notes });
   return response.data;
 };
 
 export const deleteInventoryItem = async (id: number) => {
-  const response = await api.delete(`/api/inventory/${id}`);
+  const response = await api.delete(`/inventory/${id}`);
   return response.data;
 };
 
 // Certificates functions
 export const getCertificates = async () => {
-  const response = await api.get('/api/certificates');
+  const response = await api.get('/certificates');
   return response.data;
 };
 
 export const createCertificate = async (data: any) => {
-  const response = await api.post('/api/certificates', data);
+  const response = await api.post('/certificates', data);
   return response.data;
 };
 
 export const generateCertificatePDF = async (id: number) => {
-  const response = await api.get(`/api/certificates/${id}/pdf`, {
+  const response = await api.get(`/certificates/${id}/pdf`, {
     responseType: 'blob',
   });
   return response.data;
@@ -112,49 +103,49 @@ export const generateCertificatePDF = async (id: number) => {
 
 // Treatments functions
 export const getTreatments = async () => {
-  const response = await api.get('/api/treatments');
+  const response = await api.get('/treatments');
   return response.data;
 };
 
 export const createTreatment = async (data: any) => {
-  const response = await api.post('/api/treatments', data);
+  const response = await api.post('/treatments', data);
   return response.data;
 };
 
 export const updateTreatment = async (id: number, data: any) => {
-  const response = await api.put(`/api/treatments/${id}`, data);
+  const response = await api.put(`/treatments/${id}`, data);
   return response.data;
 };
 
 // Users functions
 export const getUsers = async () => {
-  const response = await api.get('/api/users');
+  const response = await api.get('/users');
   return response.data;
 };
 
 export const createUser = async (data: any) => {
-  const response = await api.post('/api/users', data);
+  const response = await api.post('/users', data);
   return response.data;
 };
 
 export const updateUser = async (id: number, data: any) => {
-  const response = await api.put(`/api/users/${id}`, data);
+  const response = await api.put(`/users/${id}`, data);
   return response.data;
 };
 
 export const deleteUser = async (id: number) => {
-  const response = await api.delete(`/api/users/${id}`);
+  const response = await api.delete(`/users/${id}`);
   return response.data;
 };
 
 // Reports functions
 export const getReports = async (filters?: any) => {
-  const response = await api.get('/api/reports', { params: filters });
+  const response = await api.get('/reports', { params: filters });
   return response.data;
 };
 
 export const generateReportPDF = async (filters?: any) => {
-  const response = await api.get('/api/reports/pdf', {
+  const response = await api.get('/reports/pdf', {
     params: filters,
     responseType: 'blob',
   });

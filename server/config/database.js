@@ -166,28 +166,6 @@ const createTables = async () => {
       )
     `);
 
-    // Create default admin user if not exists
-    const bcrypt = require('bcryptjs');
-    const adminPassword = await bcrypt.hash('admin123', 10);
-    
-    await client.query(`
-      INSERT INTO users (username, password, full_name, email, role, permissions)
-      VALUES ($1, $2, $3, $4, $5, $6)
-      ON CONFLICT (username) DO NOTHING
-    `, [
-      'admin',
-      adminPassword,
-      'Administrador del Sistema',
-      'admin@mida.gob.pa',
-      'admin',
-      JSON.stringify({
-        inventory: ['read', 'write', 'delete'],
-        certificates: ['read', 'write', 'delete'],
-        treatments: ['read', 'write', 'delete'],
-        users: ['read', 'write', 'delete'],
-        reports: ['read', 'write']
-      })
-    ]);
 
     console.log('✅ Tablas creadas exitosamente');
   } catch (error) {
